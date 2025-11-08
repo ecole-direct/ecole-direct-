@@ -3,15 +3,11 @@
 document.addEventListener('DOMContentLoaded', () => {
     loadDevoirs();
     loadClasses();
-    loadEleves();
     loadNotes();
-    loadElevesClasse();
     loadEmploiTemps();
     loadAppel();
     setupDevoirModal();
     setupNoteModal();
-    setupEleveClasseModal();
-    setupEleveModal();
     setupEmploiTempsModal();
     setupAppel();
 });
@@ -109,6 +105,7 @@ function loadDevoirs() {
     
     container.innerHTML = profDevoirs.map((devoir) => {
         const devoirIndex = devoirs.findIndex(d => d.id === devoir.id);
+        const classeLabel = formatClasseLabel(devoir.classe);
         return `
         <div class="devoir-card">
             <div class="devoir-header">
@@ -118,7 +115,7 @@ function loadDevoirs() {
             <div class="devoir-body">
                 <p class="devoir-description">${devoir.description || 'Aucune description'}</p>
                 <div class="devoir-info">
-                    <span><i class="fas fa-users"></i> ${devoir.classe}</span>
+                    <span><i class="fas fa-users"></i> ${classeLabel}</span>
                     <span><i class="fas fa-calendar"></i> ${formatDate(devoir.dateLimite)}</span>
                 </div>
             </div>
@@ -173,27 +170,6 @@ function loadClasses() {
 }
 
 // Charger les élèves
-function loadEleves() {
-    const users = JSON.parse(localStorage.getItem('users')) || {};
-    const eleves = users.eleves || [];
-    const tbody = document.getElementById('eleves-tbody');
-    
-    if (!tbody) return;
-
-    tbody.innerHTML = eleves.map(eleve => `
-        <tr>
-            <td>${(eleve.name || '').split(' ')[1] || ''}</td>
-            <td>${(eleve.name || '').split(' ')[0] || eleve.prenom || eleve.username || ''}</td>
-            <td>${formatClasseLabel(eleve.classe)}</td>
-            <td>
-                <button class="btn btn-sm" onclick="viewEleve(${eleve.id})">
-                    <i class="fas fa-eye"></i> Voir
-                </button>
-            </td>
-        </tr>
-    `).join('');
-}
-
 // Configuration du modal devoir
 function setupDevoirModal() {
     const modal = document.getElementById('add-devoir-modal');
@@ -253,7 +229,8 @@ function addDevoir() {
     
     const titre = document.getElementById('devoir-titre')?.value;
     const description = document.getElementById('devoir-description')?.value;
-    const classe = document.getElementById('devoir-classe')?.value;
+    const classeValue = document.getElementById('devoir-classe')?.value;
+    const classe = normalizeClasse(classeValue);
     const matiere = document.getElementById('devoir-matiere')?.value;
     const dateLimite = document.getElementById('devoir-date')?.value;
     
@@ -583,203 +560,9 @@ function deleteNote(eleveId, index) {
 }
 
 // Charger les élèves pour gestion classe
-function loadElevesClasse() {
-    const users = JSON.parse(localStorage.getItem('users')) || {};
-    const eleves = users.eleves || [];
-    const container = document.getElementById('eleves-classe-container');
-    if (!container) return;
-
-    if (eleves.length === 0) {
-        container.innerHTML = '<p class="empty-state">Aucun élève enregistré pour le moment.</p>';
-        return;
-    }
-
-    const elevesSorted = [...eleves].sort((a, b) => {
-        const nameA = (a.prenom || a.name || a.username || '').toLowerCase();
-        const nameB = (b.prenom || b.name || b.username || '').toLowerCase();
-        return nameA.localeCompare(nameB, 'fr');
-    });
-
-    const tableRows = elevesSorted.map(eleve => {
-        const prenom = eleve.prenom || (eleve.name || '').split(' ')[0] || eleve.username || 'Élève';
-        const classeLabel = formatClasseLabel(eleve.classe);
-        const photo = eleve.photo
-            ? `<img src="${escapeHtml(eleve.photo)}" alt="${escapeHtml(prenom)}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">`
-            : `<div style="width: 50px; height: 50px; border-radius: 50%; background: #667eea; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">${escapeHtml(prenom.charAt(0).toUpperCase())}</div>`;
-        const qrCodeData = eleve.id || eleve.username || (eleve.prenom || eleve.name || '').toLowerCase();
-        const eleveKey = getEleveKey(eleve);
-
-        return `
-            <tr>
-                <td>${photo}</td>
-                <td>${escapeHtml(prenom)}</td>
-                <td>${escapeHtml(classeLabel)}</td>
-                <td>${escapeHtml(eleve.username || '')}</td>
-                <td><code style="background: #f0f0f0; padding: 0.3rem 0.5rem; border-radius: 4px; font-family: monospace;">${escapeHtml(eleve.password || 'N/A')}</code></td>
-                <td>
-                    <button class="btn btn-sm btn-success" onclick="downloadQRCode('${qrCodeData}', '${escapeHtml(prenom)}')" title="Télécharger QR Code">
-                        <i class="fas fa-qrcode"></i>
-                    </button>
-                </td>
-                <td>
-                    <button class="btn btn-sm btn-danger" onclick="removeEleveFromClasse('${escapeHtml(eleveKey)}')">
-                        <i class="fas fa-times"></i> Retirer de la classe
-                    </button>
-                </td>
-            </tr>
-        `;
-    }).join('');
-
-    const tableHtml = `
-        <div class="users-table-container">
-            <table class="users-table">
-                <thead>
-                    <tr>
-                        <th>Photo</th>
-                        <th>Prénom</th>
-                        <th>Classe</th>
-                        <th>Identifiant</th>
-                        <th>Mot de passe</th>
-                        <th>QR Code</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${tableRows}
-                </tbody>
-            </table>
-        </div>
-    `;
-
-    const classes = getAvailableClassesFromEleves(eleves);
-    const classesHtml = classes.map(classe => {
-        const elevesClasse = eleves.filter(e => normalizeClasse(e.classe) === classe);
-        const label = formatClasseLabel(classe);
-
-        return `
-        <div class="classe-eleves-card">
-            <h3>${label}</h3>
-            <div class="eleves-list-classe">
-                ${elevesClasse.length > 0 ?
-                    elevesClasse.map(eleve => `
-                        <div class="eleve-item-classe">
-                            <span>${escapeHtml(eleve.name || eleve.username)}</span>
-                            <button class="btn btn-sm btn-danger" onclick="removeEleveFromClasse('${escapeHtml(getEleveKey(eleve))}')">
-                                <i class="fas fa-times"></i> Retirer
-                            </button>
-                        </div>
-                    `).join('') :
-                    '<p class="empty-state">Aucun élève dans cette classe</p>'
-                }
-            </div>
-        </div>
-    `;
-    }).join('');
-
-    container.innerHTML = `
-        ${tableHtml}
-        <div class="classes-summary-grid">
-            ${classesHtml}
-        </div>
-    `;
-}
-
 // Configuration du modal ajouter élève à classe
-function setupEleveClasseModal() {
-    const modal = document.getElementById('add-eleve-classe-modal');
-    const addBtn = document.getElementById('add-eleve-classe-btn');
-    const form = document.getElementById('add-eleve-classe-form');
-    const eleveSelect = document.getElementById('eleve-classe-select');
-    const classeSelect = document.getElementById('eleve-classe-nom');
-    
-    if (eleveSelect) {
-        const users = JSON.parse(localStorage.getItem('users')) || {};
-        const eleves = users.eleves || [];
-        eleveSelect.innerHTML = '<option value="">Sélectionner un élève</option>' + 
-            eleves.map(eleve => 
-                `<option value="${getEleveKey(eleve)}">${eleve.name}${eleve.classe ? ' (' + formatClasseLabel(eleve.classe) + ')' : ''}</option>`
-            ).join('');
-    }
-    
-    if (classeSelect) {
-        const session = getSession();
-        const users = JSON.parse(localStorage.getItem('users')) || {};
-        const eleves = users.eleves || [];
-        const availableClasses = getAvailableClassesFromEleves(eleves);
-        const sessionClasses = Array.isArray(session?.user?.classes) ? session.user.classes.map(normalizeClasse) : [];
-        const classesSet = new Set([
-            ...availableClasses.filter(Boolean),
-            ...sessionClasses.filter(Boolean)
-        ]);
-
-        classeSelect.innerHTML = '<option value="">Sélectionner une classe</option>' + 
-            Array.from(classesSet.values()).map(classe => `<option value="${classe}">${classe}</option>`).join('');
-    }
-    
-    if (addBtn) {
-        addBtn.addEventListener('click', () => {
-            modal.classList.add('active');
-        });
-    }
-    
-    if (form) {
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            addEleveToClasse();
-        });
-    }
-    
-    if (modal) {
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.classList.remove('active');
-            }
-        });
-    }
-}
-
 // Ajouter un élève à une classe
-function addEleveToClasse() {
-    const eleveSelect = document.getElementById('eleve-classe-select');
-    const classeSelect = document.getElementById('eleve-classe-nom');
-
-    if (!eleveSelect || !classeSelect) return;
-
-    const eleveId = eleveSelect.value;
-    const classe = normalizeClasse(classeSelect.value);
-
-    if (!eleveId || !classe) {
-        alert('Veuillez sélectionner un élève et une classe.');
-        return;
-    }
-    
-    const users = JSON.parse(localStorage.getItem('users')) || {};
-    const eleve = (users.eleves || []).find(e => getEleveKey(e) === eleveId);
-    
-    if (eleve) {
-        eleve.classe = classe;
-        localStorage.setItem('users', JSON.stringify(users));
-        loadElevesClasse();
-        closeEleveClasseModal();
-        showNotification(`Élève ajouté à la classe ${classe} !`);
-    }
-}
-
 // Retirer un élève d'une classe
-function removeEleveFromClasse(eleveId) {
-    if (!confirm('Retirer cet élève de sa classe ?')) return;
-    
-    const users = JSON.parse(localStorage.getItem('users')) || {};
-    const eleve = (users.eleves || []).find(e => getEleveKey(e) === String(eleveId));
-    
-    if (eleve) {
-        eleve.classe = '';
-        localStorage.setItem('users', JSON.stringify(users));
-        loadElevesClasse();
-        showNotification('Élève retiré de la classe.');
-    }
-}
-
 // Fermer les modals
 function closeNoteModal() {
     document.getElementById('add-note-modal').classList.remove('active');
@@ -798,84 +581,9 @@ window.viewEleve = viewEleve;
 window.deleteNote = deleteNote;
 window.removeEleveFromClasse = removeEleveFromClasse;
 window.closeNoteModal = closeNoteModal;
-window.closeEleveClasseModal = closeEleveClasseModal;
 
 // Configuration du modal créer nouvel élève
-function setupEleveModal() {
-    const modal = document.getElementById('add-eleve-modal');
-    const addBtn = document.getElementById('add-eleve-btn');
-    const form = document.getElementById('add-eleve-form');
-    
-    if (addBtn) {
-        addBtn.addEventListener('click', () => {
-            modal.classList.add('active');
-        });
-    }
-    
-    if (form) {
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            addEleve();
-        });
-    }
-    
-    if (modal) {
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.classList.remove('active');
-            }
-        });
-    }
-}
-
 // Créer un nouvel élève
-function addEleve() {
-    const prenom = document.getElementById('eleve-prenom').value.trim();
-    const nom = document.getElementById('eleve-nom').value.trim();
-    const username = document.getElementById('eleve-username').value.trim();
-    const password = document.getElementById('eleve-password').value;
-    const classe = normalizeClasse(document.getElementById('eleve-classe-new').value);
-    
-    if (!prenom || !nom || !username || !password) {
-        alert('Veuillez remplir tous les champs obligatoires');
-        return;
-    }
-    
-    const users = JSON.parse(localStorage.getItem('users'));
-    const eleves = users.eleves || [];
-    
-    // Vérifier si l'identifiant existe déjà
-    if (eleves.find(e => e.username === username)) {
-        alert('Cet identifiant existe déjà. Veuillez en choisir un autre.');
-        return;
-    }
-    
-    // Générer un ID unique
-    const maxId = eleves.length > 0 ? Math.max(...eleves.map(e => e.id || 0)) : 0;
-    const newId = maxId + 1;
-    
-    // Créer le nouvel élève
-    const nouvelEleve = {
-        id: newId,
-        username: username,
-        password: password,
-        name: `${prenom} ${nom}`,
-        classe: classe || ''
-    };
-    
-    eleves.push(nouvelEleve);
-    users.eleves = eleves;
-    localStorage.setItem('users', JSON.stringify(users));
-    
-    // Recharger les listes
-    loadEleves();
-    loadElevesClasse();
-    
-    // Fermer le modal et réinitialiser le formulaire
-    closeEleveModal();
-    showNotification(`Élève ${prenom} ${nom} créé avec succès !`);
-}
-
 // Fermer le modal élève
 function closeEleveModal() {
     const modal = document.getElementById('add-eleve-modal');
@@ -1422,7 +1130,6 @@ function downloadQRCode(data, prenom) {
 }
 
 // Exposer les nouvelles fonctions globalement
-window.closeEleveModal = closeEleveModal;
 window.saveEmploiTemps = saveEmploiTemps;
 window.setAppelStatus = setAppelStatus;
 window.startQRScanner = startQRScanner;
