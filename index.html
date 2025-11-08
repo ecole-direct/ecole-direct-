@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Plateforme de gestion scolaire - Espace professeur et élève">
+    <title>Connexion - Plateforme Scolaire</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <div class="login-box">
+            <div class="login-header">
+                <i class="fas fa-graduation-cap"></i>
+                <h1>Plateforme Scolaire</h1>
+                <p>Espace Professeur & Élève</p>
+            </div>
+
+            <div class="login-tabs">
+                <button class="tab-btn active" data-tab="prof">Professeur</button>
+                <button class="tab-btn" data-tab="eleve">Élève</button>
+                <button class="tab-btn" data-tab="admin">Admin</button>
+            </div>
+
+            <!-- Formulaire Professeur -->
+            <div class="login-form active" id="prof-form">
+                <form id="login-prof-form">
+                    <div class="form-group">
+                        <label><i class="fas fa-user"></i> Identifiant</label>
+                        <input type="text" id="prof-username" placeholder="Votre identifiant" required>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-lock"></i> Mot de passe</label>
+                        <input type="password" id="prof-password" placeholder="Votre mot de passe" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt"></i> Se connecter
+                    </button>
+                </form>
+            </div>
+
+            <!-- Formulaire Élève -->
+            <div class="login-form" id="eleve-form">
+                <form id="login-eleve-form">
+                    <div class="form-group">
+                        <label><i class="fas fa-user"></i> Identifiant</label>
+                        <input type="text" id="eleve-username" placeholder="Votre identifiant" required>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-lock"></i> Mot de passe</label>
+                        <input type="password" id="eleve-password" placeholder="Votre mot de passe" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt"></i> Se connecter
+                    </button>
+                </form>
+            </div>
+
+            <!-- Formulaire Admin -->
+            <div class="login-form" id="admin-form">
+                <form id="login-admin-form">
+                    <div class="form-group">
+                        <label><i class="fas fa-user-shield"></i> Identifiant Admin</label>
+                        <input type="text" id="admin-username" placeholder="Identifiant administrateur" required>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-lock"></i> Mot de passe</label>
+                        <input type="password" id="admin-password" placeholder="Mot de passe administrateur" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt"></i> Se connecter
+                    </button>
+                </form>
+            </div>
+
+            <div class="login-footer">
+                <p>© 2024 Plateforme Scolaire - Tous droits réservés</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

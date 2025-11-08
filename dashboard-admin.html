@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - Plateforme Scolaire</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="dashboard-header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-graduation-cap"></i>
+                <span>Plateforme Scolaire - Administration</span>
+            </div>
+            <div class="user-info">
+                <span id="admin-name">Administrateur</span>
+                <button class="btn-logout" id="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="dashboard-nav">
+        <button class="nav-btn active" data-section="overview">
+            <i class="fas fa-chart-line"></i> Vue d'ensemble
+        </button>
+        <button class="nav-btn" data-section="users">
+            <i class="fas fa-users"></i> Utilisateurs
+        </button>
+        <button class="nav-btn" data-section="classes">
+            <i class="fas fa-chalkboard"></i> Classes
+        </button>
+        <button class="nav-btn" data-section="devoirs">
+            <i class="fas fa-book"></i> Devoirs
+        </button>
+        <button class="nav-btn" data-section="notes">
+            <i class="fas fa-star"></i> Notes
+        </button>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="dashboard-main">
+        <!-- Section Vue d'ensemble -->
+        <section class="dashboard-section active" id="overview-section">
+            <div class="section-header">
+                <h2><i class="fas fa-chart-line"></i> Vue d'ensemble</h2>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #3498db;">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="total-eleves">0</h3>
+                        <p>Élèves</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #2ecc71;">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="total-profs">0</h3>
+                        <p>Professeurs</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #9b59b6;">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="total-devoirs">0</h3>
+                        <p>Devoirs</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #e74c3c;">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="total-notes">0</h3>
+                        <p>Notes</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section Utilisateurs -->
+        <section class="dashboard-section" id="users-section">
+            <div class="section-header">
+                <h2><i class="fas fa-users"></i> Gestion des Utilisateurs</h2>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <button class="btn btn-primary" id="add-eleve-admin-btn">
+                        <i class="fas fa-user-plus"></i> Créer un élève
+                    </button>
+                    <button class="btn btn-success" id="generate-qr-codes-btn">
+                        <i class="fas fa-qrcode"></i> Générer QR Codes
+                    </button>
+                    <button class="btn btn-primary" id="add-prof-admin-btn">
+                        <i class="fas fa-user-tie"></i> Créer un professeur
+                    </button>
+                    <button class="btn btn-primary" id="add-admin-btn">
+                        <i class="fas fa-user-shield"></i> Créer un admin
+                    </button>
+                </div>
+            </div>
+            <div class="users-tabs">
+                <button class="tab-btn active" data-tab="eleves">Élèves</button>
+                <button class="tab-btn" data-tab="profs">Professeurs</button>
+                <button class="tab-btn" data-tab="admins">Administrateurs</button>
+            </div>
+            <div class="users-content">
+                <div class="tab-content active" id="eleves-tab">
+                    <div class="users-table-container">
+                        <table class="users-table">
+                            <thead>
+                                <tr>
+                                    <th>Photo</th>
+                                    <th>Prénom</th>
+                                    <th>Classe</th>
+                                    <th>Identifiant</th>
+                                    <th>Mot de passe</th>
+                                    <th>QR Code</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="eleves-table-body">
+                                <!-- Élèves chargés dynamiquement -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="tab-content" id="profs-tab">
+                    <div class="users-table-container">
+                        <table class="users-table">
+                            <thead>
+                                <tr>
+                                    <th>Nom</th>
+                                    <th>Identifiant</th>
+                                    <th>Mot de passe</th>
+                                    <th>Classes</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="profs-table-body">
+                                <!-- Professeurs chargés dynamiquement -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="tab-content" id="admins-tab">
+                    <div class="users-table-container">
+                        <table class="users-table">
+                            <thead>
+                                <tr>
+                                    <th>Nom</th>
+                                    <th>Identifiant</th>
+                                    <th>Mot de passe</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admins-table-body">
+                                <!-- Admins chargés dynamiquement -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section Classes -->
+        <section class="dashboard-section" id="classes-section">
+            <div class="section-header">
+                <h2><i class="fas fa-chalkboard"></i> Gestion des Classes</h2>
+            </div>
+            <div id="classes-admin-container">
+                <!-- Classes chargées dynamiquement -->
+            </div>
+        </section>
+
+        <!-- Section Devoirs -->
+        <section class="dashboard-section" id="devoirs-section">
+            <div class="section-header">
+                <h2><i class="fas fa-book"></i> Gestion des Devoirs</h2>
+            </div>
+            <div class="devoirs-list" id="devoirs-admin-list">
+                <!-- Devoirs chargés dynamiquement -->
+            </div>
+        </section>
+
+        <!-- Section Notes -->
+        <section class="dashboard-section" id="notes-section">
+            <div class="section-header">
+                <h2><i class="fas fa-star"></i> Gestion des Notes</h2>
+            </div>
+            <div class="notes-content" id="notes-admin-content">
+                <!-- Notes chargées dynamiquement -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Créer Élève -->
+    <div class="modal" id="add-eleve-admin-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Créer un élève</h3>
+                <button class="modal-close" onclick="closeEleveAdminModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="add-eleve-admin-form">
+                <div class="form-group">
+                    <label>Prénom *</label>
+                    <input type="text" id="admin-eleve-prenom" required>
+                </div>
+                <div class="form-group">
+                    <label>Photo (URL ou base64)</label>
+                    <input type="text" id="admin-eleve-photo" placeholder="URL de l'image ou laissez vide">
+                    <small style="color: #666;">Vous pouvez aussi utiliser un fichier local (base64)</small>
+                </div>
+                <div class="form-group">
+                    <label>Classe *</label>
+                    <select id="admin-eleve-classe" required>
+                        <option value="">Sélectionner une classe</option>
+                        <option value="CE1">CE1</option>
+                        <option value="CE2">CE2</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Identifiant *</label>
+                    <input type="text" id="admin-eleve-username" required>
+                </div>
+                <div class="form-group">
+                    <label>Mot de passe *</label>
+                    <input type="password" id="admin-eleve-password" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeEleveAdminModal()">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Créer l'élève</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Modifier Élève -->
+    <div class="modal" id="edit-eleve-admin-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Modifier un élève</h3>
+                <button class="modal-close" onclick="closeEditEleveAdminModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="edit-eleve-admin-form">
+                <input type="hidden" id="edit-eleve-id">
+                <div class="form-group">
+                    <label>Prénom *</label>
+                    <input type="text" id="edit-eleve-prenom" required>
+                </div>
+                <div class="form-group">
+                    <label>Photo (URL ou base64)</label>
+                    <input type="text" id="edit-eleve-photo" placeholder="URL de l'image ou laissez vide">
+                    <small style="color: #666;">Vous pouvez aussi utiliser un fichier local (base64)</small>
+                </div>
+                <div class="form-group">
+                    <label>Classe *</label>
+                    <select id="edit-eleve-classe" required>
+                        <option value="">Sélectionner une classe</option>
+                        <option value="CE1">CE1</option>
+                        <option value="CE2">CE2</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Identifiant *</label>
+                    <input type="text" id="edit-eleve-username" required>
+                </div>
+                <div class="form-group">
+                    <label>Nouveau mot de passe (laisser vide pour ne pas changer)</label>
+                    <input type="password" id="edit-eleve-password">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditEleveAdminModal()">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Créer Professeur -->
+    <div class="modal" id="add-prof-admin-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Créer un professeur</h3>
+                <button class="modal-close" onclick="closeProfAdminModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="add-prof-admin-form">
+                <div class="form-group">
+                    <label>Nom complet *</label>
+                    <input type="text" id="admin-prof-name" required>
+                </div>
+                <div class="form-group">
+                    <label>Identifiant *</label>
+                    <input type="text" id="admin-prof-username" required>
+                </div>
+                <div class="form-group">
+                    <label>Mot de passe *</label>
+                    <input type="password" id="admin-prof-password" required>
+                </div>
+                <div class="form-group">
+                    <label>Classes (séparées par des virgules)</label>
+                    <input type="text" id="admin-prof-classes" placeholder="Ex: CE1, CE2">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeProfAdminModal()">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Créer le professeur</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Modifier Professeur -->
+    <div class="modal" id="edit-prof-admin-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Modifier un professeur</h3>
+                <button class="modal-close" onclick="closeEditProfAdminModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="edit-prof-admin-form">
+                <input type="hidden" id="edit-prof-username-old">
+                <div class="form-group">
+                    <label>Nom complet *</label>
+                    <input type="text" id="edit-prof-name" required>
+                </div>
+                <div class="form-group">
+                    <label>Identifiant *</label>
+                    <input type="text" id="edit-prof-username" required>
+                </div>
+                <div class="form-group">
+                    <label>Nouveau mot de passe (laisser vide pour ne pas changer)</label>
+                    <input type="password" id="edit-prof-password">
+                </div>
+                <div class="form-group">
+                    <label>Classes (séparées par des virgules)</label>
+                    <input type="text" id="edit-prof-classes" placeholder="Ex: CE1, CE2">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditProfAdminModal()">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Créer Admin -->
+    <div class="modal" id="add-admin-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Créer un administrateur</h3>
+                <button class="modal-close" onclick="closeAdminModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="add-admin-form">
+                <div class="form-group">
+                    <label>Nom complet *</label>
+                    <input type="text" id="admin-name-input" required>
+                </div>
+                <div class="form-group">
+                    <label>Identifiant *</label>
+                    <input type="text" id="admin-username-input" required>
+                </div>
+                <div class="form-group">
+                    <label>Mot de passe *</label>
+                    <input type="password" id="admin-password-input" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAdminModal()">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Créer l'administrateur</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Modifier Admin -->
+    <div class="modal" id="edit-admin-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Modifier un administrateur</h3>
+                <button class="modal-close" onclick="closeEditAdminModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="edit-admin-form">
+                <input type="hidden" id="edit-admin-username-old">
+                <div class="form-group">
+                    <label>Nom complet *</label>
+                    <input type="text" id="edit-admin-name" required>
+                </div>
+                <div class="form-group">
+                    <label>Identifiant *</label>
+                    <input type="text" id="edit-admin-username" required>
+                </div>
+                <div class="form-group">
+                    <label>Nouveau mot de passe (laisser vide pour ne pas changer)</label>
+                    <input type="password" id="edit-admin-password">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditAdminModal()">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>

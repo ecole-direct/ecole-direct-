@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Élève - Plateforme Scolaire</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="dashboard-header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-graduation-cap"></i>
+                <span>Plateforme Scolaire</span>
+            </div>
+            <div class="user-info">
+                <span id="eleve-name">Élève</span>
+                <button class="btn-logout" id="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="dashboard-nav">
+        <button class="nav-btn active" data-section="devoirs">
+            <i class="fas fa-book"></i> Mes Devoirs
+        </button>
+        <button class="nav-btn" data-section="notes">
+            <i class="fas fa-star"></i> Mes Notes
+        </button>
+        <button class="nav-btn" data-section="emploi-temps">
+            <i class="fas fa-calendar-alt"></i> Emploi du Temps
+        </button>
+        <button class="nav-btn" data-section="profil">
+            <i class="fas fa-user"></i> Mon Profil
+        </button>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="dashboard-main">
+        <!-- Section Devoirs -->
+        <section class="dashboard-section active" id="devoirs-section">
+            <div class="section-header">
+                <h2><i class="fas fa-book"></i> Mes Devoirs</h2>
+            </div>
+            <div class="devoirs-list" id="devoirs-list">
+                <!-- Devoirs chargés dynamiquement -->
+            </div>
+        </section>
+
+        <!-- Section Notes -->
+        <section class="dashboard-section" id="notes-section">
+            <div class="section-header">
+                <h2><i class="fas fa-star"></i> Mes Notes</h2>
+            </div>
+            <div class="notes-content" id="notes-content">
+                <!-- Notes chargées dynamiquement -->
+            </div>
+        </section>
+
+        <!-- Section Emploi du Temps -->
+        <section class="dashboard-section" id="emploi-temps-section">
+            <div class="section-header">
+                <h2><i class="fas fa-calendar-alt"></i> Mon Emploi du Temps</h2>
+            </div>
+            <div class="emploi-temps-container" id="emploi-temps-container">
+                <!-- Emploi du temps chargé dynamiquement -->
+            </div>
+        </section>
+
+        <!-- Section Profil -->
+        <section class="dashboard-section" id="profil-section">
+            <div class="section-header">
+                <h2><i class="fas fa-user"></i> Mon Profil</h2>
+            </div>
+            <div class="profil-content" id="profil-content">
+                <!-- Profil chargé dynamiquement -->
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+    <script src="eleve.js"></script>
+</body>
+</html>
+
