@@ -85,24 +85,6 @@
             </div>
         </section>
         
-        <!-- Section Gérer les Élèves -->
-        <section class="dashboard-section" id="gestion-eleves-section">
-            <div class="section-header">
-                <h2><i class="fas fa-user-graduate"></i> Gérer les Élèves</h2>
-                <div style="display: flex; gap: 1rem;">
-                    <button class="btn btn-primary" id="add-eleve-btn">
-                        <i class="fas fa-user-plus"></i> Créer un nouvel élève
-                    </button>
-                    <button class="btn btn-secondary" id="add-eleve-classe-btn">
-                        <i class="fas fa-link"></i> Assigner un élève à une classe
-                    </button>
-                </div>
-            </div>
-            <div class="eleves-classe-container" id="eleves-classe-container">
-                <!-- Élèves et classes chargés dynamiquement -->
-            </div>
-        </section>
-
         <!-- Section Emploi du Temps -->
         <section class="dashboard-section" id="emploi-temps-section">
             <div class="section-header">
@@ -373,6 +355,66 @@
 
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <script src="script.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import {
+            getFirestore,
+            collection,
+            addDoc,
+            doc,
+            updateDoc,
+            deleteDoc,
+            onSnapshot,
+            query,
+            where,
+            orderBy,
+            serverTimestamp
+        } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+        import {
+            getAnalytics,
+            isSupported as analyticsIsSupported
+        } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDJE7Rcn8GCY1apoCy46QZ5nDScbf6XMAE",
+            authDomain: "ecole-direct-2ecce.firebaseapp.com",
+            projectId: "ecole-direct-2ecce",
+            storageBucket: "ecole-direct-2ecce.firebasestorage.app",
+            messagingSenderId: "489626808197",
+            appId: "1:489626808197:web:15709a13ac58fcc44c1eec",
+            measurementId: "G-7Z918DFGBN"
+        };
+
+        try {
+            const app = initializeApp(firebaseConfig);
+            const db = getFirestore(app);
+
+            window.firebaseApp = app;
+            window.firebaseDb = db;
+            window.firebaseFirestore = {
+                collection,
+                addDoc,
+                doc,
+                updateDoc,
+                deleteDoc,
+                onSnapshot,
+                query,
+                where,
+                orderBy,
+                serverTimestamp
+            };
+
+            analyticsIsSupported()
+                .then((supported) => {
+                    if (supported) {
+                        getAnalytics(app);
+                    }
+                })
+                .catch((err) => console.warn("Analytics non pris en charge:", err));
+        } catch (error) {
+            console.error("Erreur d'initialisation Firebase:", error);
+        }
+    </script>
     <script src="prof.js"></script>
 </body>
 </html>
