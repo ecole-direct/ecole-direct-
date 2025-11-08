@@ -12,10 +12,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setupAppel();
 });
 
-let devoirsUnsubscribe = null;
-const devoirsCache = new Map();
-let firebaseInitAttempts = 0;
-
 function normalizeClasse(classe) {
     if (classe === undefined || classe === null) {
         return '';
@@ -90,104 +86,50 @@ function escapeHtml(str = '') {
         .replace(/'/g, '&#39;');
 }
 
-// Charger les devoirs depuis Firestore
+// Charger les devoirs
 function loadDevoirs() {
-    const container = document.getElementById('devoirs-list');
-    if (!container) return;
-
-    const db = window.firebaseDb;
-    const firestoreFns = window.firebaseFirestore;
-
-    if (!db || !firestoreFns) {
-        if (firebaseInitAttempts < 5) {
-            firebaseInitAttempts += 1;
-            container.innerHTML = '<p class="empty-state">Connexion à Firebase...</p>';
-            setTimeout(loadDevoirs, 500);
-        } else {
-            container.innerHTML = '<p class="empty-state">Impossible de charger les devoirs (Firebase indisponible).</p>';
-        }
-        return;
-    }
-
+    const devoirs = JSON.parse(localStorage.getItem('devoirs')) || [];
     const session = getSession();
+    const container = document.getElementById('devoirs-list');
+    
+    if (!container) return;
+    
+    // Filtrer les devoirs du professeur connecté
     const profUsername = session?.user?.username;
-
-    if (!profUsername) {
-        container.innerHTML = '<p class="empty-state">Session professeur introuvable.</p>';
+    const profDevoirs = devoirs.filter(d => d.profId === profUsername);
+    
+    if (profDevoirs.length === 0) {
+        container.innerHTML = '<p class="empty-state">Aucun devoir créé pour le moment.</p>';
         return;
     }
-
-    if (typeof devoirsUnsubscribe === 'function') {
-        devoirsUnsubscribe();
-        devoirsUnsubscribe = null;
-    }
-
-    const { collection, query, where, orderBy, onSnapshot } = firestoreFns;
-
-    try {
-        const q = query(
-            collection(db, 'assignments'),
-            where('profId', '==', profUsername),
-            orderBy('createdAt', 'desc')
-        );
-
-        container.innerHTML = '<p class="empty-state">Chargement des devoirs...</p>';
-
-        devoirsUnsubscribe = onSnapshot(
-            q,
-            (snapshot) => {
-                devoirsCache.clear();
-
-                if (snapshot.empty) {
-                    container.innerHTML = '<p class="empty-state">Aucun devoir créé pour le moment.</p>';
-                    return;
-                }
-
-                const cards = snapshot.docs.map((docSnap) => {
-                    const devoir = docSnap.data() || {};
-                    const docId = docSnap.id;
-                    devoirsCache.set(docId, devoir);
-
-                    const classeLabel = formatClasseLabel(devoir.classe);
-                    const description = devoir.description || 'Aucune description';
-                    const dateAffichee = devoir.dateLimite ? formatDate(devoir.dateLimite) : 'Date non définie';
-
-                    return `
-        <div class="devoir-card" data-id="${docId}">
+    
+    container.innerHTML = profDevoirs.map((devoir) => {
+        const devoirIndex = devoirs.findIndex(d => d.id === devoir.id);
+        const classeLabel = formatClasseLabel(devoir.classe);
+        return `
+        <div class="devoir-card">
             <div class="devoir-header">
-                <h3>${escapeHtml(devoir.titre || 'Devoir')}</h3>
-                <span class="devoir-matiere">${escapeHtml(devoir.matiere || 'Matière')}</span>
+                <h3>${devoir.titre}</h3>
+                <span class="devoir-matiere">${devoir.matiere}</span>
             </div>
             <div class="devoir-body">
-                <p class="devoir-description">${escapeHtml(description)}</p>
+                <p class="devoir-description">${devoir.description || 'Aucune description'}</p>
                 <div class="devoir-info">
-                    <span><i class="fas fa-users"></i> ${escapeHtml(classeLabel)}</span>
-                    <span><i class="fas fa-calendar"></i> ${escapeHtml(dateAffichee)}</span>
+                    <span><i class="fas fa-users"></i> ${classeLabel}</span>
+                    <span><i class="fas fa-calendar"></i> ${formatDate(devoir.dateLimite)}</span>
                 </div>
             </div>
             <div class="devoir-actions">
-                <button class="btn btn-secondary" onclick="editDevoir('${docId}')">
+                <button class="btn btn-secondary" onclick="editDevoir(${devoir.id})">
                     <i class="fas fa-edit"></i> Modifier
                 </button>
-                <button class="btn btn-danger" onclick="deleteDevoir('${docId}')">
+                <button class="btn btn-danger" onclick="deleteDevoir(${devoirIndex})">
                     <i class="fas fa-trash"></i> Supprimer
                 </button>
             </div>
         </div>
     `;
-                }).join('');
-
-                container.innerHTML = cards;
-            },
-            (error) => {
-                console.error('Erreur Firestore (devoirs):', error);
-                container.innerHTML = '<p class="empty-state">Erreur lors du chargement des devoirs.</p>';
-            }
-        );
-    } catch (error) {
-        console.error('Erreur initialisation requête devoirs:', error);
-        container.innerHTML = '<p class="empty-state">Impossible d\'afficher les devoirs.</p>';
-    }
+    }).join('');
 }
 
 // Charger les classes
@@ -236,6 +178,11 @@ function setupDevoirModal() {
     const cancelBtn = document.getElementById('cancel-devoir');
     const form = document.getElementById('add-devoir-form');
     
+    if (!modal || !addBtn) {
+        console.error('Éléments du modal devoir introuvables');
+        return;
+    }
+    
     if (addBtn) {
         addBtn.addEventListener('click', () => {
             resetDevoirModal();
@@ -274,59 +221,59 @@ function setupDevoirModal() {
     }
 }
 
-// Ajouter ou modifier un devoir (Firestore)
-async function addDevoir() {
-    const db = window.firebaseDb;
-    const firestoreFns = window.firebaseFirestore;
+// Ajouter ou modifier un devoir
+function addDevoir() {
     const session = getSession();
-    const devoirIdEdit = document.getElementById('devoir-id-edit')?.value?.trim();
-
-    if (!db || !firestoreFns) {
-        alert('Firebase n\'est pas initialisé. Réessayez plus tard.');
-        return;
-    }
-
-    const titre = document.getElementById('devoir-titre')?.value?.trim();
-    const description = document.getElementById('devoir-description')?.value?.trim();
+    const devoirs = JSON.parse(localStorage.getItem('devoirs')) || [];
+    const devoirIdEdit = document.getElementById('devoir-id-edit')?.value;
+    
+    const titre = document.getElementById('devoir-titre')?.value;
+    const description = document.getElementById('devoir-description')?.value;
     const classeValue = document.getElementById('devoir-classe')?.value;
     const classe = normalizeClasse(classeValue);
     const matiere = document.getElementById('devoir-matiere')?.value;
     const dateLimite = document.getElementById('devoir-date')?.value;
-
+    
     if (!titre || !classe || !matiere || !dateLimite) {
         alert('Veuillez remplir tous les champs obligatoires');
         return;
     }
-
-    const { collection, addDoc, doc, updateDoc, serverTimestamp } = firestoreFns;
-    const payload = {
-        titre,
-        description: description || '',
-        classe,
-        matiere,
-        dateLimite,
-        profId: session?.user?.username || 'prof',
-        updatedAt: serverTimestamp()
-    };
-
-    try {
-        if (devoirIdEdit) {
-            const docRef = doc(db, 'assignments', devoirIdEdit);
-            await updateDoc(docRef, payload);
+    
+    if (devoirIdEdit) {
+        // Modifier un devoir existant
+        const devoirIndex = devoirs.findIndex(d => d.id == devoirIdEdit);
+        if (devoirIndex !== -1) {
+            devoirs[devoirIndex].titre = titre;
+            devoirs[devoirIndex].description = description;
+            devoirs[devoirIndex].classe = classe;
+            devoirs[devoirIndex].matiere = matiere;
+            devoirs[devoirIndex].dateLimite = dateLimite;
+            
+            localStorage.setItem('devoirs', JSON.stringify(devoirs));
+            loadDevoirs();
+            resetDevoirModal();
+            document.getElementById('add-devoir-modal').classList.remove('active');
             showNotification('Devoir modifié avec succès !');
-        } else {
-            await addDoc(collection(db, 'assignments'), {
-                ...payload,
-                createdAt: serverTimestamp()
-            });
-            showNotification('Devoir créé avec succès !');
         }
-
+    } else {
+        // Créer un nouveau devoir
+        const nouveauDevoir = {
+            id: Date.now(),
+            titre: titre,
+            description: description,
+            classe: classe,
+            matiere: matiere,
+            dateLimite: dateLimite,
+            profId: session?.user?.username || 'prof',
+            dateCreation: new Date().toISOString()
+        };
+        
+        devoirs.push(nouveauDevoir);
+        localStorage.setItem('devoirs', JSON.stringify(devoirs));
+        loadDevoirs();
         resetDevoirModal();
-        document.getElementById('add-devoir-modal')?.classList.remove('active');
-    } catch (error) {
-        console.error('Erreur lors de la sauvegarde du devoir:', error);
-        alert('Impossible d\'enregistrer le devoir. Vérifiez votre connexion et réessayez.');
+        document.getElementById('add-devoir-modal').classList.remove('active');
+        showNotification('Devoir créé avec succès !');
     }
 }
 
@@ -345,20 +292,21 @@ function resetDevoirModal() {
 
 // Modifier un devoir
 function editDevoir(devoirId) {
-    const devoir = devoirsCache.get(devoirId);
-
+    const devoirs = JSON.parse(localStorage.getItem('devoirs')) || [];
+    const devoir = devoirs.find(d => d.id == devoirId);
+    
     if (!devoir) {
         alert('Devoir introuvable');
         return;
     }
     
     // Remplir le formulaire avec les données du devoir
-    document.getElementById('devoir-id-edit').value = devoirId;
-    document.getElementById('devoir-titre').value = devoir.titre || '';
+    document.getElementById('devoir-id-edit').value = devoir.id;
+    document.getElementById('devoir-titre').value = devoir.titre;
     document.getElementById('devoir-description').value = devoir.description || '';
-    document.getElementById('devoir-classe').value = devoir.classe || '';
-    document.getElementById('devoir-matiere').value = devoir.matiere || '';
-    document.getElementById('devoir-date').value = devoir.dateLimite || '';
+    document.getElementById('devoir-classe').value = devoir.classe;
+    document.getElementById('devoir-matiere').value = devoir.matiere;
+    document.getElementById('devoir-date').value = devoir.dateLimite;
     
     // Changer le titre du modal et le bouton
     document.getElementById('devoir-modal-title').textContent = 'Modifier le devoir';
@@ -368,26 +316,23 @@ function editDevoir(devoirId) {
     document.getElementById('add-devoir-modal').classList.add('active');
 }
 
-// Supprimer un devoir (Firestore)
-async function deleteDevoir(devoirId) {
+// Supprimer un devoir
+function deleteDevoir(index) {
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce devoir ?')) return;
-
-    const db = window.firebaseDb;
-    const firestoreFns = window.firebaseFirestore;
-
-    if (!db || !firestoreFns) {
-        alert('Firebase n\'est pas initialisé.');
-        return;
-    }
-
-    try {
-        const { doc, deleteDoc } = firestoreFns;
-        const docRef = doc(db, 'assignments', devoirId);
-        await deleteDoc(docRef);
-        showNotification('Devoir supprimé.');
-    } catch (error) {
-        console.error('Erreur suppression devoir:', error);
-        alert('Impossible de supprimer ce devoir. Réessayez plus tard.');
+    
+    const devoirs = JSON.parse(localStorage.getItem('devoirs')) || [];
+    const session = getSession();
+    const profDevoirs = devoirs.filter(d => d.profId === session?.user?.username || !d.profId);
+    
+    if (index >= 0 && index < profDevoirs.length) {
+        const devoirToDelete = profDevoirs[index];
+        const devoirIndex = devoirs.findIndex(d => d.id === devoirToDelete.id);
+        if (devoirIndex !== -1) {
+            devoirs.splice(devoirIndex, 1);
+            localStorage.setItem('devoirs', JSON.stringify(devoirs));
+            loadDevoirs();
+            showNotification('Devoir supprimé.');
+        }
     }
 }
 
@@ -634,6 +579,7 @@ window.deleteDevoir = deleteDevoir;
 window.viewClass = viewClass;
 window.viewEleve = viewEleve;
 window.deleteNote = deleteNote;
+window.removeEleveFromClasse = removeEleveFromClasse;
 window.closeNoteModal = closeNoteModal;
 
 // Configuration du modal créer nouvel élève
